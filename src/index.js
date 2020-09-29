@@ -18,7 +18,7 @@ function messageSender() {
 }
 
 function sendMessageToSelected(answer) {
-    christusBot.sendMessage(selectedChannel.send(answer));
+    selectedChannel.send(answer);
     messageSender();
 }
 
