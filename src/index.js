@@ -1,6 +1,7 @@
 const {Client, MessageAttachment} = require("discord.js");
 const auth = require("../secret/auth.json");
 const readline = require("readline");
+const yahooStockPrices = require("yahoo-stock-prices");
 let selectedChannel = null;
 
 const christusBot = new Client();
@@ -25,10 +26,13 @@ function sendMessageToSelected(answer) {
 messageSender();
 
 function messageHandler(message) {
-    if (message.content.substr(0, 20) !== "Christus Schreiber, ") {
-        return;
-    }
+    if (message.content.startsWith("Christus Schreiber, "))
+        christusMessageHandler(message);
+    else if (message.content.startsWith("stonks $"))
+        stonksMessageHandler(message);
+}
 
+function christusMessageHandler(message) {
     let command = message.content.substr(20).split(", ");
 
     switch (command[0]) {
@@ -45,12 +49,21 @@ function messageHandler(message) {
             selectedChannel = message.channel;
             message.channel.send("Es wurde gewählt.");
             break;
+        case "stonks":
+        case "wie stengan die Aktien":
+            commandStock(message.channel, command[1]);
+            break;
         case "test":
             //message.channel.send("Christus Schreiber, test");
             break;
         default:
             message.channel.send("Was meinst du? Rufe hilfe und du bekommst hilfe.")
     }
+}
+
+function stonksMessageHandler(message) {
+    let stock = message.content.substring(8);
+    commandStock(message.channel, stock);
 }
 
 function commandGreet(channel, name) {
@@ -71,5 +84,14 @@ function commandCat(channel, option) {
         let messageAttachment = new MessageAttachment("https://cataas.com/cat/gif");
         messageAttachment.name = "gadse.gif";
         channel.send(messageAttachment);
+    }
+}
+
+async function commandStock(channel, stock) {
+    try {
+        let price = await yahooStockPrices.getCurrentData(stock.toUpperCase());
+        channel.send(`Die Aktie ${stock.toUpperCase()} steht grod auf ${price.price} ${price.currency}`);
+    } catch (e) {
+        channel.send("Do is jetzt wos foisch grennd du koffa");
     }
 }
