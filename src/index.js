@@ -35,6 +35,8 @@ function messageHandler(message) {
 function christusMessageHandler(message) {
     let command = message.content.substr(20).split(", ");
 
+    console.log(command);
+
     switch (command[0].toLowerCase()) {
         case "hilfe":
             commandHelp(message.channel);
@@ -42,7 +44,7 @@ function christusMessageHandler(message) {
         case "begrüß jemanden":
             commandGreet(message.channel, command[1]);
             break;
-        case "sende eine Katze":
+        case "sende eine katze":
             commandCat(message.channel, command[1]);
             break;
         case "auswählen":
@@ -50,7 +52,7 @@ function christusMessageHandler(message) {
             message.channel.send("Es wurde gewählt.");
             break;
         case "stonks":
-        case "wie stengan die Aktien":
+        case "wie stengan die aktien":
             commandStock(message.channel, command[1]);
             break;
         case "wie gehts im pfeif?":
@@ -100,11 +102,12 @@ async function commandStock(channel, stock) {
 }
 
 async function commandPfeif(channel) {
-    const gestern = getYesterday(1);
-    const heute = getYesterday(1);
+    const gestern = getYesterday(2);
+    const heute = getYesterday(0);
     const pfeifAktien = 5;
     const pfeifKaufPreis = 4.04;
-    let pfeifAktuellPreis = await yahooStockPrices.getCurrentData("NOK");
+    let pfeifAktuellPreisPromise = await yahooStockPrices.getCurrentData("NOK");
+    let pfeifAktuellPreis = pfeifAktuellPreisPromise.price;
     let pfeifGesternPreisVerlauf = await yahooStockPrices.getHistoricalPrices(
         gestern.getMonth(),
         gestern.getDate(),
@@ -114,23 +117,23 @@ async function commandPfeif(channel) {
         heute.getFullYear(),
         "NOK",
         "1d");
-    let pfeifGesternPreis = pfeifGesternPreisVerlauf[0].close;
-    let pfeifInsgesamt = pfeifAktien * (pfeifKaufPreis - pfeifAktuellPreis.price);
-    let pfeifHeute = pfeifAktien * (pfeifGesternPreis - pfeifAktuellPreis.price);
-    console.log(pfeifInsgesamt);
+    let pfeifGesternPreis = pfeifGesternPreisVerlauf[1].close;
+    let pfeifInsgesamt = pfeifAktien * (pfeifAktuellPreis - pfeifKaufPreis);
+    let pfeifHeute = Math.round(pfeifAktien * (pfeifAktuellPreis - pfeifGesternPreis) * 100);
+    console.log(pfeifGesternPreisVerlauf);
     let message = "";
 
     if (pfeifHeute < 0)
-        message += `Auwehtschal, da Pfeiffer hot seit vorgestern scho ${pfeifHeute}$ valuan.`;
+        message += `Auwehtschal, da Pfeiffer hot heut scho wieda ${pfeifHeute*-1} Cent Verlust gmocht.`;
     else if (pfeifHeute > 0)
-        message += `Wahnsinn, da Pfeiffer hot seit vorgestern scho ${pfeifHeute}$ Gewinn verbuchen kennan.`;
+        message += `Wahnsinn, da Pfeiffer hot heut scho ${pfeifHeute} Cent Gewinn verbuchen kennan.`;
     else
-        message += "Seit vorgestern hot si genau nix beim Pfeif dau.";
+        message += "Seit heut hot si genau nix beim Pfeif dau.";
 
     if (pfeifInsgesamt < 0)
-        message += ` Dazua hot a an insgesamten Verlust vo ${pfeifInsgesamt}$.`;
+        message += ` Dazua hot a an insgesamten Verlust vo ${(pfeifInsgesamt * -1).toPrecision(3)}$.`;
     else if (pfeifInsgesamt > 0)
-        message += ` Oagaweise hot er auf lange sicht scho ${pfeifInsgesamt}$ dazua griagt.`;
+        message += ` Oagaweise hot er auf lange sicht scho ${pfeifInsgesamt.toPrecision(3)}$ dazua griagt.`;
     else
         message += " Insgesamt is er auf exakt 0 Gewinn 0 Verlust";
 
